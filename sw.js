@@ -1,5 +1,5 @@
-// YDT Okuma — offline destek için basit cache-first service worker
-const CACHE_NAME = "ydt-okuma-v1";
+// YDT Okuma — offline destek için cache-first service worker (düzeltilmiş)
+const CACHE_NAME = "ydt-okuma-v2";
 const ASSETS = [
   "./index.html",
   "./manifest.json",
@@ -9,7 +9,10 @@ const ASSETS = [
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS))
+    caches.open(CACHE_NAME).then((cache) =>
+      // addAll yerine tek tek ekle: biri başarısız olursa diğerleri yine de önbelleğe alınsın
+      Promise.allSettled(ASSETS.map((url) => cache.add(url)))
+    )
   );
   self.skipWaiting();
 });
@@ -33,7 +36,20 @@ self.addEventListener("fetch", (event) => {
           caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
           return response;
         })
-        .catch(() => cached);
+        .catch(() => {
+          // ağ da başarısız oldu ve önbellekte de yoktu.
+          // Sayfa isteğiyse en azından ana sayfayı dene, o da yoksa gerçek bir Response döndür
+          // (undefined dönmek Chrome'da ERR_FAILED'a yol açar).
+          if (event.request.mode === "navigate") {
+            return caches.match("./index.html").then((fallback) =>
+              fallback || new Response(
+                "Çevrimdışısın ve bu sayfa henüz önbelleğe alınmadı.",
+                { status: 503, statusText: "Offline", headers: { "Content-Type": "text/plain; charset=utf-8" } }
+              )
+            );
+          }
+          return new Response("", { status: 504, statusText: "Offline" });
+        });
     })
   );
 });
