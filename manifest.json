@@ -2,7 +2,7 @@
   "name": "YDT Okuma",
   "short_name": "YDT Okuma",
   "description": "YDT sınavına hazırlık - kelime kartları ve okuma parçaları",
-  "start_url": "./index.html",
+  "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",

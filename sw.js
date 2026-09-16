@@ -1,7 +1,7 @@
 // YDT Okuma — offline destek için cache-first service worker (düzeltilmiş)
-const CACHE_NAME = "ydt-okuma-v2";
+const CACHE_NAME = "ydt-okuma-v3";
 const ASSETS = [
-  "./index.html",
+  "./",
   "./manifest.json",
   "./icon-192.png",
   "./icon-512.png"
@@ -41,7 +41,7 @@ self.addEventListener("fetch", (event) => {
           // Sayfa isteğiyse en azından ana sayfayı dene, o da yoksa gerçek bir Response döndür
           // (undefined dönmek Chrome'da ERR_FAILED'a yol açar).
           if (event.request.mode === "navigate") {
-            return caches.match("./index.html").then((fallback) =>
+            return caches.match("./").then((fallback) =>
               fallback || new Response(
                 "Çevrimdışısın ve bu sayfa henüz önbelleğe alınmadı.",
                 { status: 503, statusText: "Offline", headers: { "Content-Type": "text/plain; charset=utf-8" } }
