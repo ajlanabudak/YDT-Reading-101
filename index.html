@@ -183,7 +183,10 @@
       <div class="who" id="whoami"></div>
       <div class="sub2">YDT Okuma</div>
     </div>
-    <div class="sub2" id="todayLabel"></div>
+    <div style="display:flex; align-items:center; gap:10px">
+      <div class="sub2" id="todayLabel"></div>
+      <button id="logoutBtn" onclick="cikisYap()" style="background:none; padding:4px 10px; font-size:0.72rem; font-weight:700; color:var(--rose); border:1px solid var(--rose); border-radius:20px">Çıkış</button>
+    </div>
   </div>
 
   <!-- HOME -->
@@ -283,6 +286,40 @@ async function verifyMonthlyPass(input){
 
 let currentUser = null;
 let checking = false;
+
+const SESSION_KEY = "ydt_okuma_session_v1";
+
+function enterApp(name){
+  currentUser = name;
+  try { localStorage.setItem(SESSION_KEY, JSON.stringify({name})); } catch(e){}
+  document.getElementById("gate").style.display = "none";
+  document.getElementById("app").style.display = "block";
+  document.getElementById("whoami").textContent = name;
+  document.getElementById("todayLabel").textContent = new Date().toLocaleDateString("tr-TR");
+  startApp();
+}
+
+function cikisYap(){
+  currentUser = null;
+  try { localStorage.removeItem(SESSION_KEY); } catch(e){}
+  document.getElementById("app").style.display = "none";
+  document.getElementById("gate").style.display = "block";
+  document.getElementById("name").value = "";
+  document.getElementById("pass").value = "";
+  document.getElementById("msg").className = "msg";
+  document.getElementById("msg").textContent = "";
+}
+
+// Sayfa yenilenince oturumu geri yükle (isim hâlâ izinli listede ise)
+(function restoreSession(){
+  try {
+    const saved = JSON.parse(localStorage.getItem(SESSION_KEY) || "null");
+    if (saved && saved.name && getAllowedNames().includes(saved.name)) {
+      enterApp(saved.name);
+    }
+  } catch(e){}
+})();
+
 async function girisDene(){
   if (checking) return;
   const name = document.getElementById("name").value;
@@ -297,12 +334,7 @@ async function girisDene(){
   checking = false; btn.disabled = false;
 
   if (ok){
-    currentUser = name;
-    document.getElementById("gate").style.display = "none";
-    document.getElementById("app").style.display = "block";
-    document.getElementById("whoami").textContent = name;
-    document.getElementById("todayLabel").textContent = new Date().toLocaleDateString("tr-TR");
-    startApp();
+    enterApp(name);
   } else {
     msg.className="msg err"; msg.textContent="İsim veya şifre hatalı.";
   }
